@@ -14,17 +14,16 @@ function getUsers() {
         var seller_table = document.getElementById('seller_table');
         console.log("User table:", user_table);
         console.log("Seller table:", seller_table);
-        user_table.insertRow().insertCell().textContent = "TEST USER"
         data.users.forEach(user => {
-            addToggleRow(user_table, user.username, user.active)
+            addToggleRow(user_table, user.username, user.active, 'user')
         })
         data.sellers.forEach(seller => {
-            addToggleRow(seller_table, seller.username, seller.active)
+            addToggleRow(seller_table, seller.username, seller.active, 'seller')
         })
     })
 }
 
-function addToggleRow(table, username, active) {
+function addToggleRow(table, username, active, role) {
     console.log(`Inserting row for: ${username}, active: ${active}`)
     var row = table.insertRow();
     row.id = "row_" + (table.children[0].children.length-1);
@@ -39,14 +38,12 @@ function addToggleRow(table, username, active) {
         userToggle(username)
     };
     toggle.appendChild(button);
-}
-
-function addAdminButton(table) {
-    for(let i = 1; i < table.rows.length; i++) {
-        var lastCell = table.rows[i].cells[table.rows[i].cells.length - 1];
-        var button = document.createElement('button');
-        button.setAttribute("value", "Make Admin");
-        button.onclick = function() {
+    
+    if (role == 'user') {
+        var adminCell = row.insertCell()
+        var adminButton = document.createElement("button")
+        adminButton.textContent = "Make Admin"
+        adminButton.onclick = function() {
             var row = this.closest('tr')
             var username = row.cells[0].textContent;
             var ans = window.prompt(`Are you sure you want ${username} to be an admin? (yes/no)`);
@@ -54,7 +51,7 @@ function addAdminButton(table) {
                 createAdmin(username);
             }
         }
-        lastCell.appendChild(button)
+        adminCell.appendChild(adminButton)
     }
 }
 
@@ -76,8 +73,9 @@ function userToggle(username) {
         })
         .then(res=>res.json())
         .then(response=> {
+            console.log(response)
             if (response.success) {
-                getUsers()
+                location.reload()
             }
         })
         .catch(err => {
@@ -107,7 +105,7 @@ function createAdmin(username) {
         .then(res=>res.json())
         .then(response=> {
             if (response.success) {
-                getUsers()
+                location.reload()
             }
         })
         .catch(err => {
@@ -124,23 +122,23 @@ function getPendingListings() {
     fetch('/get_pending_listings')
     .then(res=>res.json())
     .then(data => {
+        table.innerHTML = ''
         for (const pending of data) {
             const row = table.insertRow();
             const productCell = row.insertCell();
-            productCell.innerText = pending.product;
-    
-            const priceCell = row.insertCell(); 
-            priceCell.innerText = parseFloat(pending.price).toFixed(2);
-            const choice = row.insertCell();
+            productCell.innerText = pending.seller;
     
             const sellerCell = row.insertCell()
-            sellerCell.innerText = pending.seller
+            sellerCell.innerText = pending.product
+
+            const priceCell = row.insertCell(); 
+            priceCell.innerText = parseFloat(pending.price).toFixed(2);
     
+            const choice = row.insertCell();
             const approve = document.createElement('button');
             approve.textContent = 'Approve';
             approve.onclick = function () {
-                addListing(pending)
-                removePending(pending)
+                addListing(pending).then(() => removePending(pending))
             };
             const deny = document.createElement('button');
             deny.textContent = 'Deny';
@@ -158,17 +156,20 @@ function getPendingListings() {
 }
 
 function addListing(listing) {
-    var {product, price, seller} = listing
-    fetch('/get_users') 
+    return fetch('/get_users') 
     .then(res => res.json())
     .then(data => {
         let sellers = data.sellers
-        let user = sellers.find(s => s.username == seller)
+        let user = sellers.find(s => s.username == listing.seller)
+        if (!user) return
+        if (!Array.isArray(user.products)) {
+            user.products = [];
+        }
         user.products.push({
-            product: product,
-            price: parseFloat(parseFloat(price).toFixed(2))
+            product: listing.product,
+            price: parseFloat(parseFloat(listing.price).toFixed(2))
         })
-        fetch('/update_listings', {
+        return fetch('/update_listings', {
             method: 'POST', 
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({sellers: sellers})
@@ -176,7 +177,7 @@ function addListing(listing) {
         .then(res=>res.json())
         .then(response=> {
             if (response.success) {
-                getPendingListings()
+                return Promise.resolve()
             }
         })
         .catch(err => {
@@ -189,7 +190,7 @@ function addListing(listing) {
 } 
 
 function removePending(listing) {
-    fetch('/get_pending_listings')
+   return fetch('/get_pending_listings')
     .then(res=>res.json())
     .then(data => {
         let pendingArray = data.filter(item => {
@@ -199,7 +200,7 @@ function removePending(listing) {
                 item.seller === listing.seller
             )
         })
-        fetch('/update_pending', {
+        return fetch('/update_pending', {
             method: 'POST', 
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({pending: pendingArray})

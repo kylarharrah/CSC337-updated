@@ -1,3 +1,9 @@
+document.addEventListener('DOMContentLoaded', () => {
+    getListings();
+    getPendingListings();
+    getSales()
+});
+
 function updateCookies() {
     return fetch('/get_user_info', {
         method: 'GET',
@@ -15,70 +21,125 @@ function updateCookies() {
 }
 
 function getListings() {
-    var user = updateCookies()
-    const listings = user.products;
-    const table = document.getElementById('listings');
+    fetch('/get_user_info', {
+        method: 'GET',
+        credentials: 'include', // Include cookies if using session-based auth
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data || !data.username) {
+            return alert('User info not loaded. Please try again.');
+        }
+        const listings = data.products;
+        const table = document.getElementById('listings');
+        table.innerHTML = ''
+        listings.forEach((listing) => {
+            const row = table.insertRow();
+            const nameCell = row.insertCell();
+            const priceCell = row.insertCell();
+            const actionCell = row.insertCell();
 
-    listings.forEach((listing) => {
-        const row = table.insertRow();
-        const nameCell = row.insertCell();
-        const priceCell = row.insertCell();
-        const actionCell = row.insertCell();
+            nameCell.innerText = listing.product;
+            priceCell.innerText = `$${parseFloat(listing.price).toFixed(2)}`;
 
-        nameCell.innerText = listing.product;
-        priceCell.innerText = `$${parseFloat(listing.price).toFixed(2)}`;
-
-        const button = document.createElement('button');
-        button.textContent = 'Delete';
-        button.onclick = () => deleteListing(listing.product);
-        actionCell.appendChild(button);
-    });
+            const button = document.createElement('button');
+            button.textContent = 'Delete';
+            button.onclick = () => deleteListing({
+                product: listing.product,
+                price: listing.price,
+                seller: data.username
+            });
+            actionCell.appendChild(button);
+        });
+    })
 }
 
-function deleteListing(productName) {
-    if (confirm(`Delete ${productName}?`)) {
-        let listings = JSON.parse(localStorage.getItem('products')) || [];
-        listings = listings.filter(listing => listing.product !== productName);
-        localStorage.setItem('products', JSON.stringify(listings));
-        getListings();
-    }
+function deleteListing(listing) {
+    return fetch('/get_users')
+        .then(res => res.json())
+        .then(data => {
+            const sellers = data.sellers;
+            const user = sellers.find(s => s.username === listing.seller);
+
+            if (!user || !Array.isArray(user.products)) {
+                console.warn("User or products not found for:", listing.seller);
+                return;
+            }
+
+            // Filter out the matching product
+            user.products = user.products.filter(p =>
+                !(p.product === listing.product && parseFloat(p.price) === parseFloat(listing.price))
+            );
+
+            return fetch('/update_listings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sellers })
+            });
+        })
+        .then(res => res.json())
+        .then(response => {
+            if (response.success) {
+                console.log("Listing deleted.");
+                getListings(); 
+            } else {
+                console.warn("Failed to delete listing.");
+            }
+        })
+        .catch(err => {
+            console.error("Error during deleteListing:", err);
+        });
 }
 
 function requestNewListing(e) {
     e.preventDefault();
-    if (!user || !user.username) {
-        return alert('User info not loaded. Please try again.');
-    }
-    const product = document.getElementById('product').value;
-    const price = parseFloat(document.getElementById('price').value);
-
-    const listing = {
-        product,
-        price,
-        seller: user.username
-    };
-
-    fetch('/create_listing', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(listing)
+    fetch('/get_user_info', {
+        method: 'GET',
+        credentials: 'include', // Include cookies if using session-based auth
     })
     .then(res => res.json())
     .then(data => {
-        alert('Listing submitted');
-        getPendingListings();
+        if (!data || !data.username) {
+            return alert('User info not loaded. Please try again.');
+        }
+        const product = document.getElementById('product').value;
+        const price = parseFloat(document.getElementById('price').value);
+
+        if (!product || isNaN(price) || price <= 0) {
+            return alert('Please provide valid product and price.');
+        }
+
+        const listing = {
+            product,
+            price,
+            seller: data.username
+        };
+
+        fetch('/create_listing', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(listing)
+        })
+        .then(res => res.json())
+        .then(response => {
+            if (response.success) {
+                alert('Listing submitted');
+                getPendingListings();
+            }
+        })
+        .catch(err => {
+            console.error('Submission failed:', err);
+        });
     })
-    .catch(err => {
-        console.error('Submission failed:', err);
-    });
 }
 
 function getPendingListings() {
-    fetch('/api/pending_listings')
+    fetch('/get_pending_listings')
         .then(res => res.json())
         .then(data => {
             const table = document.getElementById('pending_listings');
+            table.innerHTML = ''
             data.forEach(item => {
                 const row = table.insertRow();
                 row.insertCell().innerText = item.product;
