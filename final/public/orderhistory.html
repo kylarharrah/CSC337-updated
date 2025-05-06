@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Order History</title>
+        <style>
+            body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                color: #333;
+            }
+
+            .banner {
+                background-color: #508fa5;
+                padding: 2.5rem 0;
+                text-align: center;
+                color: white;
+                font-size: 2.5rem;
+                font-weight: bold;
+            }
+
+            #orderhistory {
+                width: 90%;
+                max-width: 800px;
+                margin: 2rem auto;
+                border-collapse: collapse;
+                background-color: white;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+
+            #orderhistory th {
+                background-color: #508fa5;
+                color: white;
+                text-align: left;
+                padding: 1rem;
+                font-size: 1.1rem;
+            }
+
+            #orderhistory td {
+                padding: 1rem;
+                border-bottom: 1px solid #ddd;
+            }
+
+            #orderhistory tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            #orderhistory tr:hover {
+                background-color: #eef6f9;
+            }
+            nav {
+                background-color: #222;
+                display: flex;
+                justify-content: center;
+                gap: 2rem;
+                padding: 1rem 0;
+            }
+            
+            nav a {
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 1.1rem;
+                transition: color 0.3s;
+            }
+            
+            nav a:hover {
+                color: #cccccc;
+            }
+            
+        </style>
+    </head>
+    <body>
+    
+        <div class="banner">Order History</div>
+        <nav>
+            <a href="/home">Home</a>
+            <a href="/shop">Shop</a>
+            <a href="/logout">Logout</a>
+        </nav>
+        <table id="orderhistory">
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Size</th>
+            </tr>
+            <!-- Rows inserted by JS -->
+        </table>
+
+        <script src="/src/user_src.js"></script>
+    </body>
+</html>

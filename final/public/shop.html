@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Shop</title>
+        <link rel="stylesheet" href="src/style_src.css">
+        <style>
+            body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+            }
+            h1 {
+                font-family: Arial, sans-serif;  /* or whatever font you want */
+                font-size: 3rem;                 /* consistent size */
+                font-weight: bold;
+                margin: 0;
+                padding: 0.5rem 0;
+            }
+            .top {
+                background-color:rgb(80, 144, 165);
+                padding: 1rem;
+                text-align: center;
+                color: white;
+            }
+
+            nav {
+                background-color: #222;
+                display: flex;
+                justify-content: center;
+                padding: 1rem 0;
+            }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                padding: 0.75rem 1.5rem;
+                margin: 0 0.5rem;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+                font-weight: bold;
+            }
+
+            nav a:hover {
+                background-color: #444;
+            }
+
+            .container {
+                padding: 2rem;
+                max-width: 1200px;
+            }
+
+            .product-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2rem;
+            }
+
+            .product-card {
+                background-color: white;
+                border-radius: 10px;
+                padding: 1rem;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease;
+                text-align: center;
+            }
+
+            .product-card:hover {
+                transform: translateY(-5px);
+            }
+
+            .product-card img {
+                width: 100%;
+                height: 200px;
+                object-fit: cover;
+                border-radius: 10px;
+            }
+
+            .product-card h3 {
+                margin: 0.75rem 0 0.5rem;
+                font-size: 1.1rem;
+            }
+
+            .product-card p.price {
+                font-weight: bold;
+                color: #28a745;
+                margin-bottom: 0.9;
+            }
+
+            .product-card button {
+                background-color: #007bff;
+                color: white;
+                padding: 0.5rem 1rem;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: 0.3s ease;
+            }
+
+            .product-card button:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="top">
+            <h1>Welcome to the Shoe Shop</h1>
+        </div>
+        
+        <nav>
+            <a href="/home">Home</a>
+            <a href="/cart">View Cart</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    
+        <script>
+            function logout() {
+                sessionStorage.clear(); // clear login session
+                window.location.replace("guest_home.html"); // redirect without allowing back
+            }
+            </script>
+        
+        <div class="container">
+            <div class="product-grid">
+                <!-- Product 1 -->
+                <div class="product-card">
+                    <img src="imgs/heels.jpg" alt="Heels">
+                    <h3> Heels</h3>
+                    <p class="price">$100</p>
+                    <p class="Size">
+                    <div id="heels">
+                        <label for="size">Size:</label>
+                        <select id="size" name="size">
+                            <option value="">Select</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                        </select>
+                        <br><br><label for="qt">Quantity:</label>
+        
+                        <select id="qt" name="qt">
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </form>
+                    </p>
+                    <input type="button" value="Add to Cart" onclick="addToCart('heels')">
+                </div>
+        
+                <!-- Product 2 -->
+                <div class="product-card">
+                    <img src="imgs/cowboyboots.webp" alt="Cowboy boots" style="height: 200px; object-fit: contain;">
+                    <h3>Cowboy boots</h3>
+                    <p class="price">$185</p>
+                    <p class="Size">
+                    <div id="cowboy">
+                        <label for="size">Size:</label>
+                        <select id="size" name="size">
+                            <option value="">Select</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                        </select>
+        
+                        <br><br><label for="qt">Quantity:</label>
+        
+                        <select id="qt" name="qt">
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </form>
+                    </p>
+                    <input type="button" value="Add to Cart" onclick="addToCart('cowboy')">
+                </div>
+        
+                <!-- Product 3 -->
+                <div class="product-card">
+                    <img src="imgs/converse.jpg" alt="converse">
+                    <h3>Black Converse</h3>
+                    <p class="price">$120</p>
+                    <p class="Size">
+                    <div id="converse">
+                        <label for="size">Size:</label>
+                        <select id="size" name="size">
+                            <option value="">Select</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                        </select>
+                        <br><br><label for="qt">Quantity:</label>
+        
+                        <select id="qt" name="qt">
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </form>
+                    </p>
+                    <input type="button" value="Add to Cart" onclick="addToCart('converse')">
+                </div>
+                <!-- Product 3 -->
+                <div class="product-card">
+                    <img src="imgs\Air_Jordan_1_Banned.jpg" style="height: 200px; object-fit: contain;" alt="Jordans">
+                    <h3>Jordans</h3>
+                    <p class="price">$220</p>
+                    <p class="Size">
+                    <div id="jordans">
+                        <label for="size">Size:</label>
+                        <select id="size" name="size">
+                            <option value="">Select</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                        </select> <br> <br>
+                        <label for="qt">Quantity:</label>
+        
+                        <select id="qt" name="qt">
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </form>
+                    </p>
+                    <input type="button" value="Add to Cart" onclick="addToCart('jordans')">
+                </div>
+                <div class="product-card">
+                    <img src="imgs\dope_shoes.jpg.webp" style="height: 200px; object-fit: contain;" alt="Jordans">
+                    <h3>Heelys</h3>
+                    <p class="price">$56</p>
+                    <p class="Size">
+                    <div id="dope">
+                        <label for="size">Size:</label>
+                        <select id="size" name="size">
+                            <option value="">Select</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                        </select>
+                        <br><br><label for="qt">Quantity:</label>
+                        <select id="qt" name="qt">
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </form>
+                    </p>
+                    <input type="button" value="Add to Cart" onclick="addToCart('dope')">
+                </div>
+                <div class="product-card">
+                    <img src="imgs\fuzzy_shoes.jpeg" style="height: 200px; object-fit: contain;" alt="slippers">
+                    <h3>Slippers</h3>
+                    <p class="price">$55</p>
+                    <p class="size">
+                    <div id="fuzzy">
+                        <label for="size">Size:</label>
+                        <select id="size" name="size">
+                            <option value="">Select</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                        </select>
+                        <br><br><label for="qt">Quantity:</label>
+        
+                        <select id="qt" name="qt">
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </form>
+                    </p>
+                    <input type="button" value="Add to Cart" onclick="addToCart('fuzzy')">
+                </div>
+            </div>
+        </div>
+        
+        <script src="src/user_src.js"></script>
+    </body>
+</html>

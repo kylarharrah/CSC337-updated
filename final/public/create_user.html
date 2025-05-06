@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+
+        .header {
+            background-color: rgb(80, 144, 165);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        form {
+            background-color: white;
+            padding: 2rem 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin: 2rem auto;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0 1rem 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        label {
+            margin-right: 1rem;
+        }
+
+        input[type="radio"] {
+            margin-right: 0.3rem;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 0.7rem;
+            background-color: #508fa5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #40758a;
+        }
+        nav {
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1rem 0;
+            color:white
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Welcome to Shoe World</div>
+    <nav>
+        <a href="/logout">Guest Home</a>
+    </nav>
+        <form action="/create_action" method="post">
+            <!--Not sending to create_action-->
+            Username: <input type="text" name="username"><br>
+            Password: <input type="password" name="password"><br>
+            Account Type:
+            <input type="radio" name="type"  id="User" value="User" checked>
+            <label for="User">User</label>
+            <input type="radio" name="type" id="Seller" value="Seller">
+            <label for="Seller">Seller</label><br>
+            <input type="submit" value="Create New Account">
+        </form>
+        <!--No scripting needed, just style-->
+    </body>
+</html>
