@@ -96,7 +96,7 @@
             <h2>Payment Details</h2>
             <div class="amount-due" id="amountDue">$0.00</div>
 
-            <form id="paymentForm">
+            <form id="paymentForm" onsubmit="submitted(event)">
                 <label for="address">Address:</label>
                 <input type="text" id="address" name="address" required>
 
@@ -118,7 +118,7 @@
                 <label for="cvv">CVV:</label>
                 <input type="number" id="cvv" name="cvv" maxlength="3" pattern="\d{3}" inputmode="numeric" required placeholder="123">
 
-                <button type="submit" onclick="submitted(event)" class="submit-btn">Pay Now</button>
+                <button type="submit" class="submit-btn">Pay Now</button>
             </form>
         </div>
 

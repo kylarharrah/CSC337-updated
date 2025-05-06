@@ -81,8 +81,14 @@ app.get(['/', '/home', '/index'], function(req, res) {
 app.get('/create_user', function(req, res) {res.sendFile(path.join(publicFolder, 'create_user.html'));});
 
 app.post('/create_action', express.urlencoded({'extended':true}), function(req, res){
-    // Make sure 2 users cant have the same username
+    const desiredUsername = req.body.username
+    const usernameExists = userList.some(u => u.username == desiredUsername) ||
+                           sellerList.some(s => s.username == desiredUsername) ||
+                           adminList.some(a => a.username == desiredUsername)
     
+    if (usernameExists) {
+        return res.status(400).send('Username already taken')
+    }
     var hashedPass = crypto.createHash('sha256').update(req.body.password).digest('hex');
     if (req.body.type == 'user'){
         userList.push({
@@ -137,7 +143,14 @@ app.post('/login_action', express.urlencoded({'extended':true}), function(req, r
         } else if (sellerList.includes(user)) {
             res.sendFile(path.join(publicFolder, 'seller_dash.html'));
         } else {
-            res.sendFile(path.join(publicFolder,'user_home.html'));
+            const filePath = path.join(publicFolder, 'user_home.html')
+            fs.readFile(filePath, 'utf8', (err, html) => {
+                if (err) {
+                    console.log(err)
+                }
+                const modifiedHtml = html.replace('${name}', user.username)
+                res.send(modifiedHtml)
+            })
         }
     }
     else {
@@ -145,6 +158,17 @@ app.post('/login_action', express.urlencoded({'extended':true}), function(req, r
         res.sendFile(path.join(publicFolder, 'guest_home.html'));
     }
 });
+
+app.get('/login_action', express.urlencoded({'extended':true}), function(req, res) {
+    var role = req.session.user.role
+    if (role == 'admin') {
+        res.sendFile(path.join(publicFolder,'manage.html'));
+    }
+    else if (role == 'seller') {
+        res.sendFile(path.join(publicFolder,'seller_dash.html'));
+    }
+    
+})
 
 // fetching
 app.get('/get_users', (req, res) => {
@@ -157,7 +181,7 @@ app.post('/update_users', express.json(), (req, res) => {
     adminList = admins
     try {
         fs.writeFileSync(userListPath, JSON.stringify(userList), 'utf8')
-        fs.writeFileSync(adminListPathListPath, JSON.stringify(adminList), 'utf8')
+        fs.writeFileSync(adminListPath, JSON.stringify(adminList), 'utf8')
         res.json({success: true})
     }
     catch(err) {
@@ -167,6 +191,10 @@ app.post('/update_users', express.json(), (req, res) => {
 
 app.get('/get_user_info', (req, res) => {
     const userSession = req.session.user
+
+    if (!userSession) {
+        return res.status(401).json({ error: "User not logged in" });
+    }
     let user = adminList.find(user => user.username === userSession.username) ||
                sellerList.find(user => user.username === userSession.username) ||
                userList.find(user => user.username === userSession.username)
@@ -180,8 +208,8 @@ app.get('/get_user_info', (req, res) => {
     }
     else if (userSession.role == 'seller') {
         res.json({
-            username: user.name,
-            products: user.product,
+            username: user.username,
+            products: user.products,
             sales: user.sales
         })
     }
@@ -194,7 +222,7 @@ app.get('/get_pending_listings', (req, res) => {
 app.post('/update_pending', express.json(), (req, res) => {
     let pending = req.body.pending
     try {
-        fs.writeFileSync(pendingListPathath, JSON.stringify(pending), 'utf8')
+        fs.writeFileSync(pendingListPath, JSON.stringify(pending), 'utf8')
         res.json({success: true})
     }
     catch(err) {
@@ -229,8 +257,11 @@ app.post('/update_user_status', express.json(), (req, res) => {
         found = 'userList'
     }
     else {
-        user = sellerList.find(u => u.username == username)
-        found = 'sellerList'
+        let seller = sellerList.find(s => s.username == username)
+        if (seller) {
+            seller.active = active
+            found = 'sellerList'
+        }
     } 
     
     try {
@@ -240,13 +271,18 @@ app.post('/update_user_status', express.json(), (req, res) => {
         else {
             fs.writeFileSync(sellerListPath, JSON.stringify(sellerList), 'utf8')
         }
+        res.json({success: true})
     }
     catch(err) {
         console.log(err)
+        res.json({success: false})
     }
 })
 
 app.post('/update_cart' , express.json(), (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ success: false, message: "User not logged in" });
+    }
     let userSession = req.session.user
     let user = userList.find(u => u.username == userSession.username)
     user.cart = req.body.cart
@@ -274,10 +310,18 @@ app.post('/update_orderhistory', express.json(), (req, res) => {
 
 // accessing pages
 
-app.post('/create_listing', function(req, res) {
-    //add to listing
-    if (session.user.role == 'seller') {
+app.post('/create_listing', express.json(), function(req, res) {
+    if (!req.session || !req.session.user || req.session.user.role !== 'seller') {
+        return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+    if (req.session.user.role == 'seller') {
         var pending = loadPending()
+        const existingProduct = pending.some(item => item.product === req.body.product && item.seller === req.session.user.username);
+
+        if (existingProduct) {
+            // If the product already exists for this seller, don't add it again
+            return res.status(400).json({ success: false, message: 'Product already listed.' });
+        }
         pending.push({
             'product':req.body.product,
             'price':req.body.price,
@@ -286,19 +330,13 @@ app.post('/create_listing', function(req, res) {
         try {
             var pendingListJSON = JSON.stringify(pending);
             fs.writeFileSync(pendingListPath, pendingListJSON, {'encoding':'utf8'}); 
+            res.json({success: true})
         } catch(err) {
             console.log(err);
+            res.json({success: false})
         }
-        res.sendFile(path.join(publicFolder, 'seller_dash.html'))
     }
 })
-
-
-// DONT WORK
-app.get('/logout', express.urlencoded({'extended':true}), function(req, res) {
-    req.session.destroy();
-    res.sendFile(path.join(publicFolder, 'guest_home.html'))
-});
 
 
 app.get('/shop', express.urlencoded({'extended':true}), function(req, res) {
@@ -318,6 +356,15 @@ app.get('/checkout', express.urlencoded({'extended':true}), function(req, res) {
     }
 });
 
+app.get('/logout', function(req, res) {
+    req.session.destroy(err => {
+        if (err) {
+            console.log(err)
+        }
+        res.sendFile(path.join(publicFolder, 'guest_home.html'))
+    })
+})
+
 app.listen(3000, function(){
     console.log('Server online at localhost:3000')
-});
+})
