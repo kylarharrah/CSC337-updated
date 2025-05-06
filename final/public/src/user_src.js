@@ -1,36 +1,3 @@
-// orderhistory.html
-function addToOrderHistory(cart) {
-    fetch('/update_orderhistory', {
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({cart: cart})
-    })
-    .then(res=>res.json())
-    .then(response=> {
-        if (response.success) console.log('Orderhistory updated');
-    })
-    .catch(err => {
-        console.log(err);
-    });
-}
-
-function loadOrderHistory() {
-    var user = updateCookies();
-    var history = user.orderhistory
-    var table = document.getElementById('orderhistory')
-    for (var obj of history) {
-        var row = table.insertRow();
-        var productCell = row.insertCell();
-        productCell.innerText = obj.product;
-
-        var quantityCell = row.insertCell();
-        quantityCell.innerText = obj.quantity;
-
-        var priceCell = row.insertCell()
-        priceCell.innerText = parseFloat(obj.price).toFixed(2);
-    }
-}
-
 // shop.html
 function addToCart(productId) {
     const productCard = document.getElementById(productId);
@@ -90,31 +57,31 @@ function addToCart(productId) {
 function getCart() {
     return fetch('/get_user_info', {
         method: 'GET',
-        credentials: 'include'  // Ensure cookies are sent with the request
+        credentials: 'include'  
     })
     .then(res => {
         if (!res.ok) {
             throw new Error("Failed to fetch user info");
         }
-        return res.json();  // Parse the response as JSON
+        return res.json(); 
     })
     .then(data => {
         if (data.error) {
             console.warn("Error in user data:", data.error);
-            return [];  // If there's an error, return an empty array
+            return [];  
         }
 
         // Check for user session and return the cart
         if (data.cart && Array.isArray(data.cart)) {
-            return data.cart;  // Return the user's cart if it exists
+            return data.cart;  
         } else {
             console.warn("No cart found, returning empty array.");
-            return [];  // Return an empty array if cart is undefined or not an array
+            return [];  
         }
     })
     .catch(err => {
         console.error("Error getting cart:", err);
-        return [];  // Return an empty array if there's any error
+        return []; 
     });
 }
 
@@ -152,26 +119,25 @@ async function loadCart() {
     });
 }
 
-function clearCart() {
-    var cart = {}
-    fetch('/update_cart', {
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({cart: cart})
-    })
-    .then(res=>res.json())
-    .then(response=> {
-        if (response.success) console.log('Cart cleared');
-    })
-    .catch(err => {
+async function clearCart() {
+    try {
+        const res = await fetch('/update_cart', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({cart: {}})
+        });
+
+        const response = await res.json();
+        if (response.success) {
+            console.log('Cart cleared');
+        }
+    } catch (err) {
         console.log(err);
-    });
-    document.querySelector("#cart-table tbody").innerHTML = "<tr><td colspan='5'>Your cart is empty.</td></tr>";
-    document.getElementById("grand-total").textContent = "$0.00";
+    }
 }
 //
-function proceedToCheckout() {
-    var cart = getCart()
+async function proceedToCheckout() {
+    var cart = await getCart()
     if (cart.length === 0) {
         alert("Your cart is empty. Add items before proceeding to checkout.");
         return;
@@ -180,15 +146,15 @@ function proceedToCheckout() {
 }
 
 // payment.html
-function submitted(event) {
+async function submitted(event) {
     event.preventDefault()
     var form = document.getElementById("paymentForm");
 
     if (form.checkValidity()) {
         alert("Payment succeeded!");
-        addToOrderHistory(getCart())
-        window.location.href = "/home";
-        clearCart()
+        const cart = await getCart()
+        await clearCart()
+        window.location.href = '/login_action'
     } else {
         form.reportValidity();
     }

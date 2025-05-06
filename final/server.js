@@ -96,7 +96,7 @@ app.post('/create_action', express.urlencoded({'extended':true}), function(req, 
             'password':hashedPass, 
             'active':true, 
             'cart':{},
-            'orderhistory':{}
+            'orderhistory': {}
         });
         try {
             var userListJSON = JSON.stringify(userList);
@@ -110,7 +110,6 @@ app.post('/create_action', express.urlencoded({'extended':true}), function(req, 
             'password':hashedPass, 
             'active':true, 
             'products':{},
-            'sales':{}
         });
         try {
             var sellerListJSON = JSON.stringify(sellerList);
@@ -123,6 +122,7 @@ app.post('/create_action', express.urlencoded({'extended':true}), function(req, 
 });
 
 app.post('/login_action', express.urlencoded({'extended':true}), function(req, res) {
+    
     var hashedPass = crypto.createHash('sha256').update(req.body.password).digest('hex');
     var username = req.body.username
     if(isUser(username, hashedPass)) {
@@ -160,6 +160,9 @@ app.post('/login_action', express.urlencoded({'extended':true}), function(req, r
 });
 
 app.get('/login_action', express.urlencoded({'extended':true}), function(req, res) {
+    if (!req.session.user) {
+        return res.status(401).send("Unauthorized: No session found");
+    }
     var role = req.session.user.role
     if (role == 'admin') {
         res.sendFile(path.join(publicFolder,'manage.html'));
@@ -167,7 +170,16 @@ app.get('/login_action', express.urlencoded({'extended':true}), function(req, re
     else if (role == 'seller') {
         res.sendFile(path.join(publicFolder,'seller_dash.html'));
     }
-    
+    else if (role == 'user') {
+        const filePath = path.join(publicFolder, 'user_home.html')
+        fs.readFile(filePath, 'utf8', (err, html) => {
+            if (err) {
+                console.log(err)
+            }
+            const modifiedHtml = html.replace('${name}', req.session.user.username)
+            res.send(modifiedHtml)
+        })
+    }
 })
 
 // fetching
@@ -286,19 +298,6 @@ app.post('/update_cart' , express.json(), (req, res) => {
     let userSession = req.session.user
     let user = userList.find(u => u.username == userSession.username)
     user.cart = req.body.cart
-    try {
-        fs.writeFileSync(userListPath, JSON.stringify(userList), 'utf8')
-        res.json({success : true})
-    }
-    catch(err) {
-        console.log(err)
-    }
-})
-
-app.post('/update_orderhistory', express.json(), (req, res) => {
-    let userSession = req.session.user
-    let user = userList.find(u => u.username == userSession.username)
-    user.orderhistory = req.body.orderhistory
     try {
         fs.writeFileSync(userListPath, JSON.stringify(userList), 'utf8')
         res.json({success : true})
